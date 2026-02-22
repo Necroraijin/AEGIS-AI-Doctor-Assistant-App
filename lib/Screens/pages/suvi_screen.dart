@@ -8,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SuviScreen extends StatefulWidget {
-  // We can pass a patient ID if we came from a specific patient's page
   final int? patientId;
 
   const SuviScreen({super.key, this.patientId});
@@ -19,23 +18,19 @@ class SuviScreen extends StatefulWidget {
 
 class _SuviScreenState extends State<SuviScreen>
     with SingleTickerProviderStateMixin {
-  // --- Logic Variables ---
   late stt.SpeechToText _speech;
   late FlutterTts _flutterTts;
   final ImagePicker _picker = ImagePicker();
   final SupabaseClient supabase = Supabase.instance.client;
 
-  // State
   bool _isListening = false;
   bool _isProcessing = false;
   bool _isSpeaking = false;
   String _liveText = "Tap the mic to start...";
   String _lastAiResponse = "";
 
-  // Chat Transcript (For saving later)
   final List<Map<String, String>> _transcript = [];
 
-  // Animation
   late AnimationController _waveController;
 
   @override
@@ -44,7 +39,6 @@ class _SuviScreenState extends State<SuviScreen>
     _speech = stt.SpeechToText();
     _flutterTts = FlutterTts();
 
-    // Wave Animation
     _waveController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -61,14 +55,10 @@ class _SuviScreenState extends State<SuviScreen>
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // 🗣️ VOICE SETUP & GREETING
-  // ---------------------------------------------------------------------------
   Future<void> _initVoice() async {
     await _flutterTts.setLanguage("en-IN");
     await _flutterTts.setPitch(1.0);
 
-    // Auto-Greet after a slight delay
     Future.delayed(const Duration(seconds: 1), () {
       _speak("Hello Doctor. I am Suvi. I am ready to assist you.");
     });
@@ -82,9 +72,6 @@ class _SuviScreenState extends State<SuviScreen>
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // 🎤 MICROPHONE LOGIC
-  // ---------------------------------------------------------------------------
   void _toggleListening() async {
     if (_isListening) {
       // Stop Listening
@@ -101,7 +88,6 @@ class _SuviScreenState extends State<SuviScreen>
               _liveText = val.recognizedWords;
             });
 
-            // If user stops talking for a bit (final result)
             if (val.finalResult) {
               setState(() => _isListening = false);
               _processRequest(_liveText);
@@ -112,9 +98,6 @@ class _SuviScreenState extends State<SuviScreen>
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 🧠 AI PROCESSING (Text + Image)
-  // ---------------------------------------------------------------------------
   Future<void> _processRequest(String text, {File? image}) async {
     if (text.isEmpty && image == null) return;
 
@@ -124,8 +107,6 @@ class _SuviScreenState extends State<SuviScreen>
     });
 
     try {
-      // 1. Call your Kaggle/Ngrok Backend
-      // Default to Patient ID 1 if none passed (or handle dynamic ID)
       String patientIdStr = (widget.patientId ?? 1).toString();
 
       String response = await SuviService.chatWithSuvi(
@@ -134,10 +115,9 @@ class _SuviScreenState extends State<SuviScreen>
         imageFile: image,
       );
 
-      // 2. Update UI & Speak
       setState(() {
         _lastAiResponse = response;
-        _liveText = response; // Show AI text in the main view
+        _liveText = response;
         _isProcessing = false;
         _transcript.add({"role": "ai", "content": response});
       });
@@ -151,19 +131,14 @@ class _SuviScreenState extends State<SuviScreen>
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 📸 IMAGE UPLOAD
-  // ---------------------------------------------------------------------------
   Future<void> _uploadImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       File file = File(image.path);
 
-      // Notify user
       setState(() => _liveText = "Analyzing uploaded scan...");
       _speak("I am analyzing the uploaded image.");
 
-      // Send to AI immediately with a prompt
       _processRequest(
         "Analyze this medical image and give me clinical findings.",
         image: file,
@@ -171,9 +146,6 @@ class _SuviScreenState extends State<SuviScreen>
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 💾 CONCLUDE & SAVE SESSION
-  // ---------------------------------------------------------------------------
   Future<void> _concludeSession() async {
     if (_transcript.isEmpty) {
       Navigator.pop(context);
@@ -186,13 +158,11 @@ class _SuviScreenState extends State<SuviScreen>
         .join("\n");
 
     try {
-      // 🚨 Get the currently logged-in Doctor
       final user = supabase.auth.currentUser;
 
-      // Save to Supabase
       await supabase.from('clinical_records').insert({
         'patient_id': widget.patientId ?? 1,
-        'doctor_id': user?.id, //  THIS LINKS THE DOCTOR TO THE RECORD
+        'doctor_id': user?.id,
         'content': "CONSULTATION SUMMARY:\n$fullConversation",
         'created_at': DateTime.now().toIso8601String(),
       });
@@ -213,9 +183,6 @@ class _SuviScreenState extends State<SuviScreen>
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 🎨 UI BUILD
-  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -231,7 +198,6 @@ class _SuviScreenState extends State<SuviScreen>
         child: SafeArea(
           child: Column(
             children: [
-              // 1. Header
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -286,7 +252,6 @@ class _SuviScreenState extends State<SuviScreen>
 
               const Spacer(),
 
-              // 2. Main Content (Live Text / AI Response)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: Column(
@@ -303,7 +268,6 @@ class _SuviScreenState extends State<SuviScreen>
                     ),
                     const SizedBox(height: 30),
 
-                    // The Big Text Area
                     SizedBox(
                       height: 200,
                       child: SingleChildScrollView(
@@ -327,7 +291,6 @@ class _SuviScreenState extends State<SuviScreen>
 
               const Spacer(),
 
-              // 3. Audio Visualizer (Waveform)
               SizedBox(
                 height: 60,
                 child: Row(
@@ -339,21 +302,68 @@ class _SuviScreenState extends State<SuviScreen>
 
               const Spacer(),
 
-              // 4. Action Buttons (Upload & Type)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildActionButton(Icons.image, "Upload Scan", _uploadImage),
                   const SizedBox(width: 20),
                   _buildActionButton(Icons.keyboard, "Type", () {
-                    // Optional: Show text input dialog
+                    TextEditingController textController =
+                        TextEditingController();
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: const Color(0xFF1E1E1E),
+                        title: const Text(
+                          "Type to Suvi",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        content: TextField(
+                          controller: textController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            hintText: "Enter your message...",
+                            hintStyle: TextStyle(color: Colors.white54),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white24),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF1B5AF0)),
+                            ),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1B5AF0),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              if (textController.text.isNotEmpty) {
+                                _processRequest(textController.text);
+                              }
+                            },
+                            child: const Text(
+                              "Send",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   }),
                 ],
               ),
 
               const SizedBox(height: 30),
 
-              // 5. Main Mic Button
               GestureDetector(
                 onTap: _toggleListening,
                 child: AnimatedContainer(
@@ -397,8 +407,6 @@ class _SuviScreenState extends State<SuviScreen>
       ),
     );
   }
-
-  // --- Helper Widgets ---
 
   Widget _buildWaveBar(int index) {
     return AnimatedBuilder(

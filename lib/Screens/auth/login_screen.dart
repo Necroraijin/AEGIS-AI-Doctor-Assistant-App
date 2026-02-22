@@ -34,9 +34,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkBiometricAvailability();
   }
 
-  // ---------------------------------------------------------------------------
-  // 🔐 LOGIC: EMAIL & PASSWORD LOGIN
-  // ---------------------------------------------------------------------------
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -49,14 +46,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Authenticate with Supabase
       final AuthResponse res = await supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
 
       if (res.session != null) {
-        // 2. SUCCESS: Enable Biometrics for next time
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('biometrics_enabled', true);
 
@@ -76,20 +71,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 🧬 LOGIC: BIOMETRIC LOGIN (Face ID / Touch ID)
-  // ---------------------------------------------------------------------------
   Future<void> _handleBiometricLogin() async {
     final prefs = await SharedPreferences.getInstance();
     bool isEnabled = prefs.getBool('biometrics_enabled') ?? false;
 
-    // 1. Check if user has "Registered" their face ID by logging in once before
     if (!isEnabled || supabase.auth.currentSession == null) {
       _showError("Please log in with password first to enable Face ID.");
       return;
     }
 
-    // 2. Trigger Hardware Biometrics
     try {
       bool didAuthenticate = await auth.authenticate(
         localizedReason: 'Verify your identity to access medical records',
@@ -100,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (didAuthenticate) {
-        // 3. Success: Refresh Session & Go Home
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -113,10 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _checkBiometricAvailability() async {
-    // Optional: Check if device supports it to hide/show buttons
-    // bool canCheckBiometrics = await auth.canCheckBiometrics;
-  }
+  Future<void> _checkBiometricAvailability() async {}
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -128,9 +114,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // 🎨 UI BUILD
-  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,7 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           child: Container(
-            // The White Card
             width: double.infinity,
             constraints: const BoxConstraints(maxWidth: 450),
             margin: const EdgeInsets.all(24),
@@ -157,7 +139,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 1. Icon
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -172,7 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // 2. Headers
                 Text(
                   "Welcome back, Doctor",
                   style: TextStyle(
@@ -188,7 +168,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // 3. Inputs
                 _buildLabel("Email Address"),
                 const SizedBox(height: 8),
                 TextField(
@@ -223,7 +202,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                // 4. Login Button
                 const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
@@ -251,7 +229,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 30),
 
-                // 5. Biometric Section
                 Row(
                   children: [
                     Expanded(child: Divider(color: Colors.grey[300])),
@@ -289,7 +266,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 30),
 
-                // 6. REGISTER BUTTON (New Feature)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -319,7 +295,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 20),
 
-                // Footer
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -342,8 +317,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
-  // --- Helper Widgets ---
 
   Widget _buildLabel(String text) {
     return Align(

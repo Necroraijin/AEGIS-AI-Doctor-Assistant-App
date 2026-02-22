@@ -2,17 +2,18 @@ import 'dart:io';
 import 'package:aegis/Services/suvi_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChatPage extends StatefulWidget {
-  final File imageFile; // The main X-Ray/Scan being discussed
-  final String initialContext; // The first analysis text
-  final String patientId; // To track history
+  final File? imageFile;
+  final String? initialContext;
+  final String patientId;
 
   const ChatPage({
     super.key,
-    required this.imageFile,
-    required this.initialContext,
-    this.patientId = "1", // Default for testing
+    this.imageFile,
+    this.initialContext,
+    this.patientId = "1",
   });
 
   @override
@@ -23,36 +24,80 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
+  final SupabaseClient supabase = Supabase.instance.client;
 
-  // Chat History
   final List<Map<String, dynamic>> _messages = [];
   bool _isTyping = false;
 
   @override
   void initState() {
     super.initState();
-    // 1. Add the initial analysis as the first message from AI
-    _messages.add({
-      'isUser': false,
-      'text':
-          "I've reviewed the image.\n\n${widget.initialContext}\n\nWhat specific questions do you have about these findings?",
-      'image': null,
-    });
+    if (widget.imageFile != null && widget.initialContext != null) {
+      _messages.add({
+        'isUser': false,
+        'text':
+            "I've reviewed the image.\n\n${widget.initialContext}\n\nWhat specific questions do you have about these findings?",
+        'image': null,
+      });
+    } else {
+      _messages.add({
+        'isUser': false,
+        'text': "Hello Doctor. I am Suvi. How can I assist you today?",
+        'image': null,
+      });
+    }
   }
 
-  // ---------------------------------------------------------------------------
-  // 📤 SEND MESSAGE LOGIC
-  // ---------------------------------------------------------------------------
+  Future<void> _concludeSession() async {
+    if (_messages.length <= 1) {
+      Navigator.pop(context);
+      return;
+    }
+
+    setState(() => _isTyping = true);
+
+    String fullConversation = _messages
+        .map((m) {
+          String role = m['isUser'] ? "DOCTOR" : "SUVI";
+          return "$role: ${m['text']}";
+        })
+        .join("\n\n");
+
+    try {
+      final user = supabase.auth.currentUser;
+
+      await supabase.from('clinical_records').insert({
+        'patient_id': int.tryParse(widget.patientId) ?? 1,
+        'doctor_id': user?.id,
+        'content': "TEXT CONSULTATION:\n\n$fullConversation",
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("✅ Chat Saved to Patient Record.")),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error saving: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isTyping = false);
+    }
+  }
+
   void _sendMessage(String text, {File? extraImage}) async {
     if (text.trim().isEmpty && extraImage == null) return;
 
-    // 1. Update UI immediately (Optimistic)
     setState(() {
-      _messages.add({
-        'isUser': true,
-        'text': text,
-        'image': extraImage, // Show thumbnail if user uploaded new image
-      });
+      _messages.add({'isUser': true, 'text': text, 'image': extraImage});
       _isTyping = true;
     });
 
@@ -60,17 +105,13 @@ class _ChatPageState extends State<ChatPage> {
     _scrollToBottom();
 
     try {
-      // 2. Send to Suvi Service
-      // We pass the ORIGINAL image context if no new image is provided
-      File imageToSend = extraImage ?? widget.imageFile;
-
+      File? imageToSend = extraImage ?? widget.imageFile;
       String response = await SuviService.chatWithSuvi(
         text: text,
         patientId: widget.patientId,
         imageFile: imageToSend,
       );
 
-      // 3. Update UI with Response
       if (mounted) {
         setState(() {
           _isTyping = false;
@@ -90,15 +131,9 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 📸 PICK EXTRA IMAGE
-  // ---------------------------------------------------------------------------
   Future<void> _pickExtraImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      // Confirm before sending
-      _showImageConfirmDialog(File(image.path));
-    }
+    if (image != null) _showImageConfirmDialog(File(image.path));
   }
 
   void _showImageConfirmDialog(File image) {
@@ -112,12 +147,11 @@ class _ChatPageState extends State<ChatPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.file(image, height: 150),
-            const SizedBox(height: 10),
             TextField(
               controller: captionCtrl,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
-                hintText: "Add a question... (optional)",
+                hintText: "Add a question...",
                 hintStyle: TextStyle(color: Colors.grey),
               ),
             ),
@@ -158,9 +192,6 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // 🎨 UI BUILD
-  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     const Color primaryBlue = Color(0xFF1B5AF0);
@@ -169,45 +200,23 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       backgroundColor: bgDark,
-
-      // --- AppBar ---
       appBar: AppBar(
         backgroundColor: bgDark,
         elevation: 0,
         title: Row(
           children: [
-            Stack(
-              children: [
-                const CircleAvatar(
-                  backgroundImage: NetworkImage(
-                    "https://i.imgur.com/BoN9kdC.png",
-                  ), // Suvi Avatar
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                      border: Border.fromBorderSide(
-                        BorderSide(color: bgDark, width: 2),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            CircleAvatar(
+              backgroundColor: primaryBlue.withOpacity(0.2),
+              child: const Icon(Icons.auto_awesome, color: Colors.blueAccent),
             ),
             const SizedBox(width: 12),
             const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Med-Gemma AI",
+                  "Suvi",
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -221,45 +230,43 @@ class _ChatPageState extends State<ChatPage> {
           ],
         ),
         actions: [
-          // Show the image being discussed
-          GestureDetector(
-            onTap: () => showDialog(
-              context: context,
-              builder: (_) => Dialog(child: Image.file(widget.imageFile)),
-            ),
-            child: Container(
-              margin: const EdgeInsets.all(8),
-              width: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                image: DecorationImage(
-                  image: FileImage(widget.imageFile),
-                  fit: BoxFit.cover,
+          IconButton(
+            icon: const Icon(Icons.save_alt, color: Colors.white),
+            tooltip: "Save Session",
+            onPressed: _concludeSession,
+          ),
+          if (widget.imageFile != null)
+            GestureDetector(
+              onTap: () => showDialog(
+                context: context,
+                builder: (_) => Dialog(child: Image.file(widget.imageFile!)),
+              ),
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                width: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  image: DecorationImage(
+                    image: FileImage(widget.imageFile!),
+                    fit: BoxFit.cover,
+                  ),
+                  border: Border.all(color: Colors.white24),
                 ),
-                border: Border.all(color: Colors.white24),
               ),
             ),
-          ),
         ],
       ),
-
-      // --- Body ---
       body: Column(
         children: [
-          // Chat List
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(20),
               itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                return _buildMessageBubble(msg, primaryBlue, cardDark);
-              },
+              itemBuilder: (context, index) =>
+                  _buildMessageBubble(_messages[index], primaryBlue, cardDark),
             ),
           ),
-
-          // Typing Indicator
           if (_isTyping)
             Padding(
               padding: const EdgeInsets.only(left: 20, bottom: 10),
@@ -277,15 +284,13 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      "Med-Gemma is analyzing...",
+                      "Suvi is typing...",
                       style: TextStyle(color: Colors.grey[500], fontSize: 12),
                     ),
                   ],
                 ),
               ),
             ),
-
-          // Input Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: BoxDecoration(
@@ -297,7 +302,6 @@ class _ChatPageState extends State<ChatPage> {
             child: SafeArea(
               child: Row(
                 children: [
-                  // Attach Button
                   IconButton(
                     onPressed: _pickExtraImage,
                     icon: const Icon(
@@ -305,8 +309,6 @@ class _ChatPageState extends State<ChatPage> {
                       color: Colors.grey,
                     ),
                   ),
-
-                  // Text Field
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -318,7 +320,7 @@ class _ChatPageState extends State<ChatPage> {
                         controller: _textController,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
-                          hintText: "Ask follow-up questions...",
+                          hintText: "Message Suvi...",
                           hintStyle: TextStyle(color: Colors.grey[600]),
                           border: InputBorder.none,
                         ),
@@ -327,8 +329,6 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-
-                  // Send Button
                   GestureDetector(
                     onTap: () => _sendMessage(_textController.text),
                     child: Container(
@@ -353,7 +353,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // --- Helper: Bubble UI ---
   Widget _buildMessageBubble(
     Map<String, dynamic> msg,
     Color primary,
@@ -361,57 +360,75 @@ class _ChatPageState extends State<ChatPage> {
   ) {
     bool isUser = msg['isUser'];
     File? attachedImage = msg['image'];
-
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: isUser
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
-        children: [
-          // Image Attachment (if any)
-          if (attachedImage != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 5),
-              height: 150,
-              width: 200,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                image: DecorationImage(
-                  image: FileImage(attachedImage),
-                  fit: BoxFit.cover,
-                ),
+    Widget content = Column(
+      crossAxisAlignment: isUser
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        if (attachedImage != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: 5),
+            height: 150,
+            width: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              image: DecorationImage(
+                image: FileImage(attachedImage),
+                fit: BoxFit.cover,
               ),
             ),
-
-          // Text Bubble
-          if (msg['text'] != null && msg['text'].toString().isNotEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 5),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.80,
-              ),
-              decoration: BoxDecoration(
-                color: isUser ? primary : secondary,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: isUser ? const Radius.circular(20) : Radius.zero,
-                  bottomRight: isUser ? Radius.zero : const Radius.circular(20),
-                ),
-              ),
-              child: Text(
-                msg['text'],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  height: 1.4,
-                ),
+          ),
+        if (msg['text'] != null && msg['text'].toString().isNotEmpty)
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75,
+            ),
+            decoration: BoxDecoration(
+              color: isUser ? primary : secondary,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(20),
+                topRight: const Radius.circular(20),
+                bottomLeft: isUser ? const Radius.circular(20) : Radius.zero,
+                bottomRight: isUser ? Radius.zero : const Radius.circular(20),
               ),
             ),
-        ],
-      ),
+            child: Text(
+              msg['text'],
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                height: 1.4,
+              ),
+            ),
+          ),
+      ],
     );
+
+    if (isUser)
+      return Align(alignment: Alignment.centerRight, child: content);
+    else
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: primary.withOpacity(0.2),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Colors.blueAccent,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Align(alignment: Alignment.centerLeft, child: content),
+            ),
+          ],
+        ),
+      );
   }
 }

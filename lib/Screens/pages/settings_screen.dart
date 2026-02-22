@@ -1,9 +1,8 @@
-
 import 'package:aegis/Screens/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../utils/constants.dart'; // Ensure this exists
+import '../../utils/constants.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -36,9 +35,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSavedSettings();
   }
 
-  // ---------------------------------------------------------------------------
-  // 1. LOAD DATA (User Profile + Saved URL)
-  // ---------------------------------------------------------------------------
   Future<void> _loadUserProfile() async {
     final user = supabase.auth.currentUser;
     if (user != null) {
@@ -55,7 +51,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSavedSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      // Load the saved Ngrok URL, or fallback to the one in Constants
       String savedUrl = prefs.getString('ngrok_url') ?? AppConstants.ngrokUrl;
       _urlController.text = savedUrl;
 
@@ -64,15 +59,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // 2. SAVE LOGIC (URL + Toggles)
-  // ---------------------------------------------------------------------------
   Future<void> _saveUrl() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('ngrok_url', _urlController.text.trim());
-
-    // Ideally, update the singleton/constant in real-time too
-    // Constants.baseUrl = _urlController.text.trim();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,11 +81,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.setBool(key, value);
   }
 
-  // ---------------------------------------------------------------------------
-  // 3. LOGOUT LOGIC
-  // ---------------------------------------------------------------------------
   Future<void> _handleLogout() async {
-    // Show confirmation dialog
     bool confirm =
         await showDialog(
           context: context,
@@ -132,9 +117,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 🎨 UI BUILD
-  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -142,8 +124,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         backgroundColor: bgGrey,
         elevation: 0,
-        // Since this is likely inside a TabView, we don't always need a back button
-        // But if navigated to directly:
+
         automaticallyImplyLeading: false,
         title: Text(
           "Settings",
@@ -162,7 +143,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             const SizedBox(height: 10),
 
-            // 1. Account Section
             _buildSectionHeader("ACCOUNT"),
             _buildTileGroup([
               _buildTile(
@@ -185,7 +165,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ]),
             const SizedBox(height: 30),
 
-            // 2. AI Configuration (Hackathon Special)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -249,7 +228,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 30),
 
-            // 3. Developer / Server Config
             _buildSectionHeader("SERVER CONNECTION (DEV)"),
             Container(
               padding: const EdgeInsets.all(16),
@@ -290,7 +268,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 30),
 
-            // 4. App Preferences
             _buildSectionHeader("APP PREFERENCES"),
             _buildTileGroup([
               _buildTile(
@@ -312,7 +289,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ]),
             const SizedBox(height: 30),
 
-            // 5. Logout Button
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -345,8 +321,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
-  // --- Helper Widgets ---
 
   Widget _buildSectionHeader(String title) {
     return Padding(

@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
 class PatientDetailScreen extends StatefulWidget {
-  final int patientId; // We receive the ID from the previous screen
+  final int patientId;
 
   const PatientDetailScreen({super.key, required this.patientId});
 
@@ -24,7 +24,6 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
     _fetchPatientDetails();
   }
 
-  // 1. Fetch Profile & History
   Future<void> _fetchPatientDetails() async {
     try {
       // Get Profile
@@ -34,7 +33,6 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
           .eq('id', widget.patientId)
           .single();
 
-      // Get History (Clinical Records)
       final historyRes = await supabase
           .from('clinical_records')
           .select()
@@ -80,11 +78,9 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- Profile Header ---
                   _buildProfileHeader(),
                   const SizedBox(height: 20),
 
-                  // --- Vitals Cards ---
                   Row(
                     children: [
                       Expanded(
@@ -114,7 +110,6 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
                   ),
                   const SizedBox(height: 30),
 
-                  // --- Medical History ---
                   const Text(
                     "Clinical History",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -132,8 +127,6 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             ),
     );
   }
-
-  // --- Widgets ---
 
   Widget _buildProfileHeader() {
     String name = _patientData!['full_name'] ?? "Unknown";
@@ -217,7 +210,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
     String date = DateFormat(
       'MMM d, yyyy',
     ).format(DateTime.parse(record['created_at']));
-    // Assuming 'content_markdown' stores the summary
+
     String content =
         record['content_markdown'] ?? record['content'] ?? "No details.";
 

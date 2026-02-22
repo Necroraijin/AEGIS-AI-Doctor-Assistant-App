@@ -9,31 +9,28 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  // 1. Controller to handle page swipes programmatically
   final PageController _pageController = PageController();
 
-  // 2. Track which page is currently visible
   int _currentIndex = 0;
 
-  // 3. The Content Data for your 3 Pages
   final List<Map<String, String>> _onboardingData = [
     {
       "title": "Your AI Medical\nSecond Opinion",
       "subtitle":
           "Powered by Med-Gemma 27B. Analyze complex medical queries with enterprise-grade accuracy.",
-      "image": "assets/images/brain_3d.png", // Ensure this exists
+      "image": "assets/images/brain_3d.png",
     },
     {
       "title": "Instant Analysis\nfrom X-Rays",
       "subtitle":
           "Upload scans and let our vision model detect anomalies in seconds, supporting your diagnosis.",
-      "image": "assets/images/xray_scan.png", // Placeholder path
+      "image": "assets/images/xray_scan.png",
     },
     {
       "title": "Secure & Private\nPatient Data",
       "subtitle":
           "Your data is processed securely. We prioritize patient confidentiality above all else.",
-      "image": "assets/images/secure_shield.png", // Placeholder path
+      "image": "assets/images/secure_shield.png",
     },
   ];
 
@@ -43,16 +40,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  // 4. Function to handle button press
   void _onNextPressed() {
     if (_currentIndex < _onboardingData.length - 1) {
-      // Go to next page
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     } else {
-      // Last page: Go to Home
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -69,11 +63,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: bgGrey,
       body: Center(
         child: Container(
-          // The Main White Card
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-          padding: const EdgeInsets.symmetric(
-            vertical: 30,
-          ), // Remove horizontal padding here
+          padding: const EdgeInsets.symmetric(vertical: 30),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(30),
@@ -87,7 +78,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           child: Column(
             children: [
-              // --- 1. Top Logo (Static) ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
@@ -114,7 +104,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
               const SizedBox(height: 20),
 
-              // --- 2. Swipable PageView Area ---
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
@@ -130,25 +119,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Column(
                         children: [
                           const Spacer(),
-                          // Image Area
+
                           Container(
                             height: 250,
                             width: 250,
                             decoration: BoxDecoration(
                               color: Colors.black, // Placeholder BG
                               borderRadius: BorderRadius.circular(30),
-                              // If image fails to load, this prevents crash
+
                               image: DecorationImage(
                                 image: AssetImage(
                                   _onboardingData[index]["image"]!,
                                 ),
                                 fit: BoxFit.cover,
-                                onError: (exception, stackTrace) {
-                                  // Fallback logic if image missing
-                                },
+                                onError: (exception, stackTrace) {},
                               ),
                             ),
-                            // Fallback Icon if you don't have images yet
+
                             child:
                                 _onboardingData[index]["image"]!.contains(
                                   "brain",
@@ -190,7 +177,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
               const SizedBox(height: 30),
 
-              // --- 3. Pagination Dots ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
@@ -204,7 +190,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
               const SizedBox(height: 30),
 
-              // --- 4. Dynamic Button ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: SizedBox(
@@ -252,7 +237,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // Helper widget for dots
   Widget _buildDot({required bool isActive, required Color color}) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),

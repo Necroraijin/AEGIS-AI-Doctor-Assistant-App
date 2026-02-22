@@ -29,13 +29,9 @@ class _PatientsPageState extends State<PatientsPage> {
     _fetchPatients();
   }
 
-  // ---------------------------------------------------------------------------
-  // 🔗 FETCH PATIENTS FROM SUPABASE
-  // ---------------------------------------------------------------------------
   Future<void> _fetchPatients() async {
     setState(() => _isLoading = true);
     try {
-      // Fetch all patients ordered by most recently added
       final response = await supabase
           .from('patients')
           .select('*')
@@ -44,7 +40,7 @@ class _PatientsPageState extends State<PatientsPage> {
       if (mounted) {
         setState(() {
           _allPatients = List<Map<String, dynamic>>.from(response);
-          _filteredPatients = _allPatients; // Initially show all
+          _filteredPatients = _allPatients;
           _isLoading = false;
         });
       }
@@ -58,9 +54,6 @@ class _PatientsPageState extends State<PatientsPage> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 🔍 SEARCH LOGIC
-  // ---------------------------------------------------------------------------
   void _filterPatients(String query) {
     if (query.isEmpty) {
       setState(() => _filteredPatients = _allPatients);
@@ -75,9 +68,6 @@ class _PatientsPageState extends State<PatientsPage> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 🎨 MAIN UI
-  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,15 +82,12 @@ class _PatientsPageState extends State<PatientsPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.sort, color: textDark),
-            onPressed: () {
-              // Optional: Implement Sort Logic
-            },
+            onPressed: () {},
           ),
         ],
       ),
       body: Column(
         children: [
-          // 1. Search Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: TextField(
@@ -120,7 +107,6 @@ class _PatientsPageState extends State<PatientsPage> {
             ),
           ),
 
-          // 2. Patient List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -140,10 +126,8 @@ class _PatientsPageState extends State<PatientsPage> {
         ],
       ),
 
-      // 3. Add Patient Button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to Add Patient Screen (To be implemented)
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Add Patient feature coming next!")),
           );
@@ -154,9 +138,6 @@ class _PatientsPageState extends State<PatientsPage> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // 📇 PATIENT CARD WIDGET
-  // ---------------------------------------------------------------------------
   Widget _buildPatientCard(Map<String, dynamic> patient) {
     String name = patient['full_name'] ?? "Unknown";
     String gender = patient['gender'] ?? "Unknown";
@@ -168,7 +149,6 @@ class _PatientsPageState extends State<PatientsPage> {
           ).format(DateTime.parse(patient['created_at']))
         : "N/A";
 
-    // Determine avatar color based on gender
     Color avatarColor = gender.toLowerCase() == 'male'
         ? Colors.blue[100]!
         : gender.toLowerCase() == 'female'
@@ -185,9 +165,7 @@ class _PatientsPageState extends State<PatientsPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => PatientDetailScreen(
-              patientId: patient['id'], // Pass the ID
-            ),
+            builder: (context) => PatientDetailScreen(patientId: patient['id']),
           ),
         );
       },
@@ -207,7 +185,6 @@ class _PatientsPageState extends State<PatientsPage> {
         ),
         child: Row(
           children: [
-            // Avatar
             CircleAvatar(
               radius: 30,
               backgroundColor: avatarColor,
@@ -222,7 +199,6 @@ class _PatientsPageState extends State<PatientsPage> {
             ),
             const SizedBox(width: 20),
 
-            // Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +235,6 @@ class _PatientsPageState extends State<PatientsPage> {
               ),
             ),
 
-            // Arrow
             Icon(Icons.chevron_right, color: Colors.grey[300]),
           ],
         ),

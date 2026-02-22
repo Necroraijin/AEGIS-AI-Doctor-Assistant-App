@@ -9,10 +9,9 @@ class ReportGenerator {
     required String patientName,
     required String reportContent,
     required String date,
-    String? patientFaceUrl, // NEW: Patient Face
-    String? scanImageUrl, // The X-Ray/MRI
+    String? patientFaceUrl,
+    String? scanImageUrl,
   }) async {
-    // 1. Build X-Ray/Scan Section
     String scansHtml = "";
     if (scanImageUrl != null && scanImageUrl.isNotEmpty) {
       scansHtml =
@@ -24,14 +23,12 @@ class ReportGenerator {
       """;
     }
 
-    // 2. Build Patient Face Profile Image HTML
     String faceHtml = "";
     if (patientFaceUrl != null && patientFaceUrl.isNotEmpty) {
       faceHtml =
           """<img src="$patientFaceUrl" style="width: 80px; height: 80px; border-radius: 40px; object-fit: cover; border: 2px solid #1B5AF0;" />""";
     }
 
-    // 3. HTML Content
     String htmlContent =
         """
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>

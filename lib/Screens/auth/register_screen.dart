@@ -12,11 +12,9 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // --- 1. State & Controllers ---
   final SupabaseClient supabase = Supabase.instance.client;
   final ImagePicker _picker = ImagePicker();
 
-  // Text Controllers
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -28,12 +26,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _isPasswordVisible = false;
 
-  // --- 2. Colors & Styles ---
   final Color primaryBlue = const Color(0xFF1B5AF0);
   final Color bgGrey = const Color(0xFFF2F4F7);
   final Color textDark = const Color(0xFF1A1A1A);
 
-  // Fix for text visibility
   final TextStyle inputTextStyle = const TextStyle(
     color: Colors.black87,
     fontSize: 16,
@@ -50,7 +46,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // --- 3. Logic: Image Picker ---
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
@@ -58,14 +53,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // --- 4. Logic: Supabase Registration (UPDATED FOR VERIFICATION) ---
   Future<void> _handleRegistration() async {
     final email = _emailCtrl.text.trim();
     final password = _passwordCtrl.text.trim();
     final firstName = _firstNameCtrl.text.trim();
     final lastName = _lastNameCtrl.text.trim();
 
-    // A. Basic Validation
     if (email.isEmpty || password.isEmpty || firstName.isEmpty) {
       _showError("Please fill in all required fields.");
       return;
@@ -80,8 +73,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // B. Create User in Supabase Auth
-      // emailRedirectTo: Helps with deep linking later if needed
       final AuthResponse res = await supabase.auth.signUp(
         email: email,
         password: password,
@@ -95,15 +86,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         },
       );
 
-      // C. Check Verification Status
-      // If "Confirm Email" is ON in Supabase, session will be null here.
       if (res.session == null && res.user != null) {
-        // CASE 1: Verification Required
         if (mounted) {
           _showVerificationDialog(email);
         }
       } else if (res.session != null) {
-        // CASE 2: No Verification Required (Logged in immediately)
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -120,11 +107,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // --- 5. Helper: Verification Dialog (NEW) ---
   void _showVerificationDialog(String email) {
     showDialog(
       context: context,
-      barrierDismissible: false, // User must press button to exit
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Column(
@@ -144,9 +130,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              // Close dialog AND go back to Login Screen
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to Login (pop RegisterScreen)
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
             child: Text(
               "OK, I'll Check",
@@ -164,7 +149,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // --- 6. UI Build ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -198,7 +182,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Center(
         child: SingleChildScrollView(
           child: Container(
-            // The Main Card
             width: double.infinity,
             constraints: const BoxConstraints(maxWidth: 450),
             margin: const EdgeInsets.all(20),
@@ -217,7 +200,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Progress Bar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -230,7 +212,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 30),
 
-                // 2. Heading
                 Text(
                   "Let’s start with your\ndetails.",
                   style: TextStyle(
@@ -242,7 +223,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // 3. AI Trust Banner
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -270,7 +250,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 25),
 
-                // 4. Form Fields
                 Row(
                   children: [
                     Expanded(
@@ -292,7 +271,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 15),
 
-                // Email
                 _buildTextField(
                   label: "Work Email",
                   hint: "jane.doe@hospital.com",
@@ -302,7 +280,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 15),
 
-                // Password
                 Text(
                   "Password",
                   style: const TextStyle(
@@ -333,7 +310,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 15),
 
-                // Phone
                 _buildTextField(
                   label: "Mobile Number",
                   hint: "+1 (555) 000-0000",
@@ -343,7 +319,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 15),
 
-                // Specialty Dropdown
                 const Text(
                   "Primary Specialty",
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -372,7 +347,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 25),
 
-                // 5. Upload ID Box
                 const Text(
                   "Medical ID / Badge",
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -436,7 +410,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 30),
 
-                // 6. Continue Button
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -482,7 +455,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 20),
 
-                // Footer
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -501,8 +473,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-
-  // --- Helper Widgets ---
 
   Widget _buildTextField({
     required String label,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../api/aegis_api.dart'; // Import your API logic
+import '../../api/aegis_api.dart';
 
 class MobileNurseBody extends StatefulWidget {
   const MobileNurseBody({super.key});
@@ -29,7 +29,6 @@ class _MobileNurseBodyState extends State<MobileNurseBody> {
     _flutterTts = FlutterTts();
   }
 
-  // --- LOGIC SECTION ---
   Future<void> _takePhoto() async {
     final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
     if (photo != null) {
@@ -68,7 +67,6 @@ class _MobileNurseBodyState extends State<MobileNurseBody> {
   Future<void> _processConsultation(String text) async {
     setState(() => _status = "AEGIS is Thinking...");
 
-    // Call your separate API file
     String response = await AegisApi.askNurse(text, _selectedImage);
 
     setState(() {
@@ -80,7 +78,6 @@ class _MobileNurseBodyState extends State<MobileNurseBody> {
     await _flutterTts.setLanguage("en-IN");
     await _flutterTts.speak(response);
   }
-  // ---------------------
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +94,6 @@ class _MobileNurseBodyState extends State<MobileNurseBody> {
       ),
       body: Column(
         children: [
-          // 1. CHAT DISPLAY (The "Screen")
           Expanded(
             child: Container(
               margin: const EdgeInsets.all(16),
@@ -143,7 +139,6 @@ class _MobileNurseBodyState extends State<MobileNurseBody> {
             ),
           ),
 
-          // 2. STATUS INDICATOR
           Text(
             _status,
             style: const TextStyle(
@@ -153,7 +148,6 @@ class _MobileNurseBodyState extends State<MobileNurseBody> {
           ),
           const SizedBox(height: 20),
 
-          // 3. CONTROL PANEL (Buttons)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
             decoration: const BoxDecoration(
@@ -166,7 +160,6 @@ class _MobileNurseBodyState extends State<MobileNurseBody> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // Camera
                 IconButton(
                   onPressed: _takePhoto,
                   icon: const Icon(
@@ -180,7 +173,6 @@ class _MobileNurseBodyState extends State<MobileNurseBody> {
                   ),
                 ),
 
-                // MIC BUTTON (The Star)
                 GestureDetector(
                   onTap: _listen,
                   child: Container(
@@ -208,7 +200,6 @@ class _MobileNurseBodyState extends State<MobileNurseBody> {
                   ),
                 ),
 
-                // Clear / Refresh
                 IconButton(
                   onPressed: () => setState(() => _textLog = "Ready..."),
                   icon: const Icon(

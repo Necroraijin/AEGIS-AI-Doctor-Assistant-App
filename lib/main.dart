@@ -1,34 +1,29 @@
 import 'package:aegis/Screens/auth/login_screen.dart';
 import 'package:aegis/Screens/pages/home_page.dart';
-import 'package:camera/camera.dart'; // 1. Import Camera Package
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// 2. Create a global variable to store the list of cameras
 List<CameraDescription> cameras = [];
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 3. Initialize Cameras
   try {
     cameras = await availableCameras();
   } on CameraException catch (e) {
     debugPrint('Error in fetching the cameras: $e');
   }
 
-  // 4. Initialize Supabase
   await Supabase.initialize(
     url: 'https://ceesnsewtbkouxjnzwqc.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlZXNuc2V3dGJrb3V4am56d3FjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzMyMzgsImV4cCI6MjA4Njk0OTIzOH0.19fxCmQ4iStEJo0_tq5j2PDtxInIVKLLFfTZMcfMq94',
   );
 
-  // 5. Check if user is already logged in
   final session = Supabase.instance.client.auth.currentSession;
   final isLoggedIn = session != null;
 
-  // 6. Run App with the status
   runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
@@ -47,7 +42,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Inter',
       ),
-      // 7. Decide where to start
+
       home: isLoggedIn ? const HomePage() : const LoginScreen(),
     );
   }

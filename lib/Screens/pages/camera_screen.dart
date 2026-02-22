@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:aegis/Screens/pages/add_patient_page.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import '../../main.dart'; // To access 'cameras'
-import 'chat_page.dart'; // To send the captured image for analysis
-import 'suvi_screen.dart'; // To open Suvi if Face ID matches
-import '../../services/suvi_service.dart'; // The Agentic backend
+import 'package:image_picker/image_picker.dart';
+import '../../main.dart';
+import 'chat_page.dart';
+import 'suvi_screen.dart';
+import '../../services/suvi_service.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -21,7 +23,6 @@ class _CameraScreenState extends State<CameraScreen>
   late Animation<double> _scanAnimation;
   bool _isTakingPicture = false;
 
-  // Colors
   final Color primaryBlue = const Color(0xFF1B5AF0);
   final Color darkBg = const Color(0xFF0F172A);
 
@@ -30,7 +31,6 @@ class _CameraScreenState extends State<CameraScreen>
     super.initState();
     _initCamera();
 
-    // Scanning Animation
     _scanController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -44,7 +44,7 @@ class _CameraScreenState extends State<CameraScreen>
 
   Future<void> _initCamera() async {
     if (cameras.isEmpty) return;
-    // Default to back camera
+
     _controller = CameraController(
       cameras[0],
       ResolutionPreset.max,
@@ -67,9 +67,6 @@ class _CameraScreenState extends State<CameraScreen>
     super.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // 📸 ROUTE 1: SCAN DOCUMENT (Sends to Chat/Analysis)
-  // ---------------------------------------------------------------------------
   Future<void> _takePicture() async {
     if (_controller == null ||
         !_controller!.value.isInitialized ||
@@ -101,13 +98,9 @@ class _CameraScreenState extends State<CameraScreen>
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 👁️ ROUTE 2: FACE ID (Sends to Aegis-Vision Agent)
-  // ---------------------------------------------------------------------------
   Future<void> _scanPatientFace() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
-    // 1. Show Loading UI
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -117,16 +110,12 @@ class _CameraScreenState extends State<CameraScreen>
     );
 
     try {
-      // 2. Capture Image
       final XFile image = await _controller!.takePicture();
 
-      // 3. Send to Vision Agent
       final result = await SuviService.identifyPatientFace(File(image.path));
 
-      // 4. Close Loading Dialog
       if (mounted) Navigator.pop(context);
 
-      // 5. Handle Result
       if (result['status'] == 'success') {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -135,7 +124,7 @@ class _CameraScreenState extends State<CameraScreen>
               backgroundColor: Colors.green,
             ),
           );
-          // Launch SUVI Pre-loaded with this Patient's ID!
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -144,7 +133,6 @@ class _CameraScreenState extends State<CameraScreen>
           );
         }
       } else {
-        // 🚨 PATIENT NOT FOUND: Ask to create new record
         if (mounted) {
           showDialog(
             context: context,
@@ -171,8 +159,13 @@ class _CameraScreenState extends State<CameraScreen>
                     backgroundColor: const Color(0xFF1B5AF0),
                   ),
                   onPressed: () {
-                    Navigator.pop(context);
-                    // TODO: Navigate to AddPatientScreen passing the captured image
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddPatientScreen(),
+                      ),
+                    );
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text("Routing to New Patient Form..."),
@@ -201,9 +194,6 @@ class _CameraScreenState extends State<CameraScreen>
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 🎨 UI BUILD
-  // ---------------------------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
@@ -217,21 +207,17 @@ class _CameraScreenState extends State<CameraScreen>
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // 1. Camera Feed
           SizedBox(
             height: MediaQuery.of(context).size.height,
             width: double.infinity,
             child: CameraPreview(_controller!),
           ),
 
-          // 2. Dark Overlay
           Container(color: Colors.black.withOpacity(0.3)),
 
-          // 3. UI Layer
           SafeArea(
             child: Column(
               children: [
-                // Top Bar
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -281,7 +267,6 @@ class _CameraScreenState extends State<CameraScreen>
 
                 const Spacer(flex: 1),
 
-                // Scanner Frame
                 Center(
                   child: Stack(
                     alignment: Alignment.center,
@@ -313,7 +298,7 @@ class _CameraScreenState extends State<CameraScreen>
                           ],
                         ),
                       ),
-                      // Laser Animation
+
                       AnimatedBuilder(
                         animation: _scanAnimation,
                         builder: (context, child) {
@@ -347,7 +332,6 @@ class _CameraScreenState extends State<CameraScreen>
                 ),
                 const Spacer(flex: 2),
 
-                // Bottom Controls - UPDATED FOR DUAL AGENTS
                 Container(
                   padding: const EdgeInsets.only(
                     top: 30,
@@ -364,7 +348,6 @@ class _CameraScreenState extends State<CameraScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // Action 1: Scan Document
                       _buildBottomAction(
                         icon: Icons.document_scanner,
                         label: "Scan Doc",
@@ -372,7 +355,6 @@ class _CameraScreenState extends State<CameraScreen>
                         onTap: _takePicture,
                       ),
 
-                      // Action 2: Face ID (Agentic Vision)
                       _buildBottomAction(
                         icon: Icons.face_retouching_natural,
                         label: "Face ID",
@@ -381,12 +363,28 @@ class _CameraScreenState extends State<CameraScreen>
                         onTap: _scanPatientFace,
                       ),
 
-                      // Action 3: Import
                       _buildBottomAction(
                         icon: Icons.image,
                         label: "Gallery",
                         color: Colors.white,
-                        onTap: () {}, // Can wire up ImagePicker here later
+                        onTap: () {
+                          ImagePicker()
+                              .pickImage(source: ImageSource.gallery)
+                              .then((pickedFile) {
+                                if (pickedFile != null) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChatPage(
+                                        imageFile: File(pickedFile.path),
+                                        initialContext:
+                                            "I have selected a medical document/scan from the gallery. Please analyze it.",
+                                      ),
+                                    ),
+                                  );
+                                }
+                              });
+                        },
                       ),
                     ],
                   ),
@@ -399,7 +397,6 @@ class _CameraScreenState extends State<CameraScreen>
     );
   }
 
-  // --- Helpers ---
   Widget _buildCircleBtn(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -435,9 +432,7 @@ class _CameraScreenState extends State<CameraScreen>
               shape: BoxShape.circle,
               border: isPrimary ? Border.all(color: color, width: 2) : null,
             ),
-            child:
-                _isTakingPicture &&
-                    !isPrimary // Just a quick way to show loading on doc scan
+            child: _isTakingPicture && !isPrimary
                 ? const SizedBox(
                     width: 28,
                     height: 28,

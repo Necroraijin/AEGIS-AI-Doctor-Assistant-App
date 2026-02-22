@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
-import '../../services/report_generator.dart'; // Import the generator
+import '../../services/report_generator.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key, String? analysisText});
@@ -15,7 +15,6 @@ class _ReportsPageState extends State<ReportsPage> {
   List<Map<String, dynamic>> _reports = [];
   bool _isLoading = true;
 
-  // Doctor Info (Cached for the report)
   String _doctorName = "Unknown";
   String _specialty = "General";
 
@@ -26,7 +25,6 @@ class _ReportsPageState extends State<ReportsPage> {
     _fetchDoctorProfile();
   }
 
-  // 1. Get Doctor Info for the Word Doc
   Future<void> _fetchDoctorProfile() async {
     final user = supabase.auth.currentUser;
     if (user?.userMetadata != null) {
@@ -38,7 +36,6 @@ class _ReportsPageState extends State<ReportsPage> {
     }
   }
 
-  // 2. Fetch Reports List
   Future<void> _fetchReports() async {
     try {
       final response = await supabase
@@ -55,7 +52,6 @@ class _ReportsPageState extends State<ReportsPage> {
     }
   }
 
-  // 3. Handle Download Tap
   void _downloadReport(Map<String, dynamic> report) {
     String patientName = report['patients']?['full_name'] ?? "Unknown Patient";
     String content =
@@ -64,7 +60,6 @@ class _ReportsPageState extends State<ReportsPage> {
       'yyyy-MM-dd',
     ).format(DateTime.parse(report['created_at']));
 
-    // Trigger Generator
     ReportGenerator.generateAndOpenReport(
       doctorName: _doctorName,
       specialty: _specialty,
@@ -160,7 +155,6 @@ class _ReportsPageState extends State<ReportsPage> {
           Text(snippet, style: const TextStyle(color: Colors.black87)),
           const SizedBox(height: 15),
 
-          // ACTION BUTTON
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -175,6 +169,34 @@ class _ReportsPageState extends State<ReportsPage> {
                 ),
               ),
             ),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.download),
+            label: const Text("Download Word Report"),
+            onPressed: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Generating Report...")),
+              );
+
+              try {
+                final user = Supabase.instance.client.auth.currentUser;
+                String doctorName =
+                    user?.userMetadata?['full_name'] ?? "Aegis Doctor";
+
+                await ReportGenerator.generateAndOpenReport(
+                  doctorName: doctorName,
+                  specialty: "General Practice",
+                  patientName: "Rajesh Kumar",
+                  reportContent:
+                      "Patient reported a persistent cough. Prescribed rest and hydration.",
+                  date: DateTime.now().toString().split(" ")[0],
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text("Error: $e")));
+              }
+            },
           ),
         ],
       ),

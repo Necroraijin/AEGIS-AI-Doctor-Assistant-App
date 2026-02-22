@@ -4,12 +4,9 @@ import 'dart:convert';
 import '../utils/constants.dart';
 
 class AegisApi {
-  // The function to talk to the Brain
   static Future<String> askNurse(String text, File? image) async {
     try {
-      // 1. TODO: Add Logic here to check RAM (Hybrid Check)
-      // If RAM > 8GB && Image == null -> Run Local Model
-      // Else -> Run Cloud Model (Below)
+      
 
       var request = http.MultipartRequest(
         'POST',
