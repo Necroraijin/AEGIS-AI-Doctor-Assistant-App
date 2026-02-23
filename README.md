@@ -1,16 +1,76 @@
-# aegis
+# ⚕️ AEGIS - AI Doctor Assistant App
 
-A new Flutter project.
+[![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev/)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Google Gemini](https://img.shields.io/badge/Med--Gemma%204B-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
-## Getting Started
+**Project name:** *AEGIS*
 
-This project is a starting point for a Flutter application.
+**Team Name:** *Black Cat* 
 
-A few resources to get you started if this is your first Flutter project:
+**Team Members:** *Sumit Singh - Vibecoder and AI/ML Engineer*
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+**Problem statement**
+*In many rural or under-resourced healthcare settings, doctors lack immediate support to comprehensively interpret patient history, potential complications, or diagnostic clues. This can lead to missed or delayed diagnoses, worsening patient outcomes. I aim to bridge this gap with an AI-assisted voice companion that helps doctors analyze patient cases in real-time, ensuring they don’t miss key details—even in resource-limited environments.*
+
+**Overall solution**
+*To solve this, I built AEGIS—a multi-agent AI operating system that fits right into a doctor's pocket. By utilizing Google's **Med-Gemma 1.5 (4B)** model, I created "Suvi", a conversational AI Clinical Nurse.* 
+
+*The effective use of this medical-grade model lies in its Agent-to-Agent (A2A) architecture. Instead of typing into clunky EHR systems, doctors can use Voice-to-Text to consult with Suvi hands-free while actively examining a patient. Suvi uses Retrieval-Augmented Generation (RAG) to instantly pull the patient's past medical history from our database and cross-reference it with current symptoms.* 
+
+Beyond just chat, the solution includes:
+* **👁️ Aegis-Vision:** A computer vision agent that uses a quick face scan to instantly securely retrieve a patient's medical file.
+* **🗣️ Suvi Voice:** The core clinical reasoning agent that acts as a real-time sounding board for the doctor.
+* **✍️ Aegis-Scribe:** A background agent that takes the unstructured voice transcript and automatically generates a structured, ready-to-sign Word Document report, eliminating administrative overhead.
+
+**Technical details**
+*Product feasibility and deployment in low-resource environments were my top priorities. Building a massive AI app is useless if a rural clinic can't afford the hardware to run it.* 
+
+*That is why I specifically engineered the backend to utilize the **Med-Gemma 4B** model rather than the heavier 27B version. The 4B model runs flawlessly on a single, low-cost T4 GPU (which I hosted via Kaggle for this build), making cloud-hosting financially viable for under-resourced clinics.* 
+
+**The Tech Stack:**
+* **Frontend:** Built in Flutter, ensuring it runs smoothly on standard, low-cost Android tablets or smartphones already present in clinics.
+* **Backend:** Python and FastAPI, exposed via Ngrok for seamless mobile-to-cloud communication.
+* **Database:** Supabase (PostgreSQL) handles our vector database for storing patient records, ensuring lightning-fast RAG retrieval.
+* **AI Protocol:** Because Med-Gemma is a reasoning model, it naturally outputs its internal "scratchpad" thoughts. To maintain a professional UI, I implemented a strict Regex-based preprocessing layer that traps and scrubs the model's `<think>...</think>` tags on the backend. The doctor only ever sees and hears the clean, final clinical advice.
+
+
+### 🏗️ System Architecture
+
+AEGIS uses a hub-and-spoke multi-agent architecture. The Flutter client captures real-world inputs and routes them through our FastAPI orchestrator, which delegates tasks to the appropriate specialized agent.
+
+[System Architecture](https://mermaid.live/edit#pako:eNptU9tu00AQ_ZXVPqBW5GK7cS8WQsqlDREEhaTtAw4PG3vqrGrvWut1lRLngQ9AiHckeOMX-B5-AD6B8dqlhnYlWzOzZy47Z2ZLAxkC9WikWLom56OlIHiyfFUZhjEHoYnfPx1PFmQqVzwG0k9T0iZnca41qHeVR3kuJv5IBloqlBrmIUt8_EAx0iVnLACyCJhoAKY88C8lx4suOYeNJsM10_U9iHAp_itqwIJrtBP_JYsirGc8uyALUDegyrJYpvuzCXlKXkdKXtdh7pPNZY5Vb_tR-a5KwbQToUt9GLMs41cc1O7e45JnXAr_99fPH379-ET6EPGsXRmJCdN4yiK_4Yj8_s1I1bVHphC2x5AkjPQGTXCg-Ar8n18-3setbP_EfawFI6bZimVA_EWeGqkRdzTw92Yy05GCxZtX5BIMJ6PBfjM3mlgE_h7WxgMWk0mC6p15_2FqZJC028-LCjdjt7FkYVF3sIIgjwZiuOwaJh_FVf-696XDlOlgXY3GabKCMOQiyoq68Q_QOJPClDwHlkmB2MJ0-wHwTKqEafKEnG5SqXRRN_zuRTWFzwwUygpmSl7hgBfYqwpiSDSAeX-Mj9FmG17wDNt024BVpJW4MQgcdA2kE8qgwEWgLdwtHlJPqxxaFNcgYaVKt6Xvkuo1JLCkHoohU9dLuhQ79EmZeCtlcuemZB6tqXfF4gy1PA0xxYgzHIbkr1UhW6CGMheaeo5jmyDU29IN9WzH7hz3jlzHdg8PHNu23Ba9pV7vsHNio-ZYTu_AsWx316LvTVqrc-RavWPHdU8cq2db9uHuD1T4VKU)
+
+**🚀 How to Run and Install**
+*Because AEGIS utilizes a heavy LLM backend, the project is split into two parts: a local Flutter app and a cloud-based GPU backend.*
+
+**Part 1: Start the Backend (Kaggle/Colab)**
+
+1. Open the provided Aegis_Backend.ipynb file in Kaggle or Google Colab (Ensure a T4 GPU is enabled).
+
+2. Insert your HuggingFace Token and Ngrok Auth Token into the configuration cell.
+
+3. Run all cells.
+
+4. The final cell will spin up the FastAPI server and output a public Ngrok URL (e.g., https://xxxx.ngrok-free.app). Copy this URL.
+
+
+**Part 2: Run the Flutter App**
+
+1. Clone this repository:
+```git clone [https://github.com/Necroraijin/AEGIS-AI-Doctor-Assistant-App.git]```
+
+2. Install dependencies:
+```flutter pub get```
+
+3. Update the API connection:
+* Navigate to the app's internal Settings page (or lib/utils/constants.dart).
+* Paste the fresh Ngrok URL generated by your Kaggle notebook.
+
+4. Run the app on a physical device or emulator:
+```flutter run```
+
+
