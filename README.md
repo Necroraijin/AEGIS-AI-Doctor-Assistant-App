@@ -42,7 +42,7 @@ Beyond just chat, the solution includes:
 
 AEGIS uses a hub-and-spoke multi-agent architecture. The Flutter client captures real-world inputs and routes them through our FastAPI orchestrator, which delegates tasks to the appropriate specialized agent.
 
-[System Architecture](https://mermaid.live/edit#pako:eNptU9tu00AQ_ZXVPqBW5GK7cS8WQsqlDREEhaTtAw4PG3vqrGrvWut1lRLngQ9AiHckeOMX-B5-AD6B8dqlhnYlWzOzZy47Z2ZLAxkC9WikWLom56OlIHiyfFUZhjEHoYnfPx1PFmQqVzwG0k9T0iZnca41qHeVR3kuJv5IBloqlBrmIUt8_EAx0iVnLACyCJhoAKY88C8lx4suOYeNJsM10_U9iHAp_itqwIJrtBP_JYsirGc8uyALUDegyrJYpvuzCXlKXkdKXtdh7pPNZY5Vb_tR-a5KwbQToUt9GLMs41cc1O7e45JnXAr_99fPH379-ET6EPGsXRmJCdN4yiK_4Yj8_s1I1bVHphC2x5AkjPQGTXCg-Ar8n18-3setbP_EfawFI6bZimVA_EWeGqkRdzTw92Yy05GCxZtX5BIMJ6PBfjM3mlgE_h7WxgMWk0mC6p15_2FqZJC028-LCjdjt7FkYVF3sIIgjwZiuOwaJh_FVf-696XDlOlgXY3GabKCMOQiyoq68Q_QOJPClDwHlkmB2MJ0-wHwTKqEafKEnG5SqXRRN_zuRTWFzwwUygpmSl7hgBfYqwpiSDSAeX-Mj9FmG17wDNt024BVpJW4MQgcdA2kE8qgwEWgLdwtHlJPqxxaFNcgYaVKt6Xvkuo1JLCkHoohU9dLuhQ79EmZeCtlcuemZB6tqXfF4gy1PA0xxYgzHIbkr1UhW6CGMheaeo5jmyDU29IN9WzH7hz3jlzHdg8PHNu23Ba9pV7vsHNio-ZYTu_AsWx316LvTVqrc-RavWPHdU8cq2db9uHuD1T4VKU)
+[System Architecture](aegis\image.png)
 
 **🚀 How to Run and Install**
 *Because AEGIS utilizes a heavy LLM backend, the project is split into two parts: a local Flutter app and a cloud-based GPU backend.*
