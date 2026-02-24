@@ -21,7 +21,7 @@
 ***
 
 **Motivation for the project**
-*My grandfather had a small infection on his hand due to a cut by a rusted and old blade and my grandfather live in a very rural area. So he showed his wound to a local doctor there and the doctor diagnosed it and gave him some medicine. Slowly the infection grew bigger nad bigger and eventually the we had to shift to a city hospital where he was made to amputate his infected arm and the doctors said only if the infection was diagnosed perfectly earlier we wouldn't had to amputate his arm. NOw I totaly understand that Doctors are human to and it might be duw to some physical or mental reason he was unable to diagnosed my grandfather accurately. And this gave me the motivation to build this app, and I believe that Ai can help the doctor so much by being an assistant to them so that the doctor can diagnosed the patients much better by leveraging ai capabilities like image and report scanning, one to one deep conversation, patient previous data retrival by RAG.etc
+*My grandfather had a small infection on his hand due to a cut by a rusted and old blade and my grandfather live in a very rural area. So he showed his wound to a local doctor there and the doctor diagnosed it and gave him some medicine. Slowly the infection grew bigger nad bigger and eventually the we had to shift to a city hospital where he was made to amputate his infected arm and the doctors said only if the infection was diagnosed perfectly earlier we wouldn't had to amputate his arm. NOw I totaly understand that Doctors are human to and it might be duw to some physical or mental reason he was unable to diagnosed my grandfather accurately. And this gave me the motivation to build this app, and I believe that Ai can help the doctor so much by being an assistant to them so that the doctor can diagnosed the patients much better by leveraging ai capabilities like image and report scanning, one to one deep conversation, patient previous data retrival by RAG.etc*
 
 ***
 **Overall solution**
@@ -55,7 +55,7 @@ Beyond just chat, the solution includes:
 
 AEGIS uses a hub-and-spoke multi-agent architecture. The Flutter client captures real-world inputs and routes them through our FastAPI orchestrator, which delegates tasks to the appropriate specialized agent.
 
-![System Architecture]("image.png")
+![System Architecture]("C:\Users\Sumit\Desktop\New folder\aegis\image.png")
 
 ***
 
