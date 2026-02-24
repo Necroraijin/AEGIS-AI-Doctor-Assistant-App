@@ -17,20 +17,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       "title": "Your AI Medical\nSecond Opinion",
       "subtitle":
-          "Powered by Med-Gemma 27B. Analyze complex medical queries with enterprise-grade accuracy.",
-      "image": "assets/images/brain_3d.png",
+          "Powered by Med-Gemma 4B. Analyze complex medical queries with enterprise-grade accuracy.",
+      "image": "assets/Ai_icon.png",
     },
     {
       "title": "Instant Analysis\nfrom X-Rays",
       "subtitle":
           "Upload scans and let our vision model detect anomalies in seconds, supporting your diagnosis.",
-      "image": "assets/images/xray_scan.png",
+      "image": "assets/lungs.png",
     },
     {
       "title": "Secure & Private\nPatient Data",
       "subtitle":
           "Your data is processed securely. We prioritize patient confidentiality above all else.",
-      "image": "assets/images/secure_shield.png",
+      "image": "assets/folder.png",
     },
   ];
 
