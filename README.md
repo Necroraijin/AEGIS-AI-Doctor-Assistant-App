@@ -55,7 +55,7 @@ Beyond just chat, the solution includes:
 
 AEGIS uses a hub-and-spoke multi-agent architecture. The Flutter client captures real-world inputs and routes them through our FastAPI orchestrator, which delegates tasks to the appropriate specialized agent.
 
-![System Architecture](aegis\image.png)
+![System Architecture](aegis/image.png)
 
 ***
 
